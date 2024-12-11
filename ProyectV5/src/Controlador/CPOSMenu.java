@@ -9,7 +9,9 @@ import javax.swing.*;
 import DAO.DProducto;
 import Modelo.MProducto;
 
+import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 public class CPOSMenu {
     private final VPOSMenu view;
@@ -20,17 +22,23 @@ public class CPOSMenu {
         this.orderTotal = 0.00;
     }
 
-    public ActionListener createFruitButtonListener(String fruit, double pricePerKilo) {
+    public List<MProducto> getProductosPorTipo(String tipo) {
+        DProducto dao = new DProducto();
+        return dao.obtenerProductosPorTipo(tipo); // Llamada al método en la capa DAO
+    }
+    
+    public ActionListener createDynamicButtonListener(MProducto producto) {
         return e -> {
-            String input = JOptionPane.showInputDialog(view, "Ingrese el peso en kg de " + fruit + ":");
+            String input = JOptionPane.showInputDialog(view, "Ingrese el peso en kg de " + producto.getNombreProducto() + ":");
             if (input == null || input.trim().isEmpty()) { // Validar entrada nula o vacía
                 JOptionPane.showMessageDialog(view, "Por favor, ingrese un valor válido para el peso.");
                 return;
             }
             try {
-                double weight = Double.parseDouble(input.trim()); // Eliminar espacios y convertir
-                double totalPrice = weight * pricePerKilo;
-                view.getProductListModel().addElement(fruit + " (" + weight + " kg) - $" + String.format("%.2f", totalPrice));
+                double weight = Double.parseDouble(input.trim());
+                double totalPrice = weight * producto.getCosto().doubleValue();
+
+                view.getProductListModel().addElement(producto.getNombreProducto() + " (" + weight + " kg) - $" + String.format("%.2f", totalPrice));
                 orderTotal += totalPrice;
                 view.getOrderTotalLabel().setText("Order Total: $" + String.format("%.2f", orderTotal));
             } catch (NumberFormatException ex) {
@@ -40,23 +48,47 @@ public class CPOSMenu {
     }
     
 
-    public void openFruitSearch() {
-        String[] moreFruits = { "Limon", "Lechuga", "Fresas", "Naranjas" };
-        double[] moreFruitPrices = { 15.0, 10.0, 60.0, 25.0 };
-
-        String selectedFruit = (String) JOptionPane.showInputDialog(view, "Seleccione una fruta:", "Buscar Frutas",
-                JOptionPane.PLAIN_MESSAGE, null, moreFruits, moreFruits[0]);
-
-        if (selectedFruit != null) {
-            for (int i = 0; i < moreFruits.length; i++) {
-                if (selectedFruit.equals(moreFruits[i])) {
-                    createFruitButtonListener(moreFruits[i], moreFruitPrices[i]).actionPerformed(null);
-                    break;
+    public void openMoreProductsDialog() {
+        List<MProducto> productosGR = getProductosPorTipo("GR"); // Obtener productos de tipo "GR"
+    
+        if (productosGR.isEmpty()) {
+            JOptionPane.showMessageDialog(view, "No hay productos disponibles con el tipo 'GR'.");
+            return;
+        }
+    
+        // Crear el panel para la lista de productos
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.add(new JLabel("Seleccione un producto:"), BorderLayout.NORTH);
+    
+        // Lista de productos
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        productosGR.forEach(p -> listModel.addElement(p.getNombreProducto()));
+        JList<String> productList = new JList<>(listModel);
+        JScrollPane scrollPane = new JScrollPane(productList);
+        panel.add(scrollPane, BorderLayout.CENTER);
+    
+        // Mostrar cuadro de diálogo
+        int option = JOptionPane.showConfirmDialog(view, panel, "Seleccionar Producto", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+    
+        if (option == JOptionPane.OK_OPTION) {
+            // Obtener el producto seleccionado
+            String selectedProduct = productList.getSelectedValue();
+            if (selectedProduct != null) {
+                MProducto productoSeleccionado = productosGR.stream()
+                        .filter(p -> p.getNombreProducto().equals(selectedProduct))
+                        .findFirst()
+                        .orElse(null);
+    
+                if (productoSeleccionado != null) {
+                    createDynamicButtonListener(productoSeleccionado).actionPerformed(null);
                 }
+            } else {
+                JOptionPane.showMessageDialog(view, "No seleccionaste ningún producto.");
             }
         }
     }
-
+    
+    
     public void searchProductByBarcode() {
     String barcode = JOptionPane.showInputDialog(view, "Ingrese el número de código de barras:");
     
@@ -96,9 +128,10 @@ public void continueSale() {
 
         // Obtener el total de la orden
         double orderTotal = Double.parseDouble(view.getOrderTotalLabel().getText().replace("Order Total: $", ""));
-
+        // Asegúrate de tener una referencia a CCorteCaja
+    CCorteCaja corteCaja = new CCorteCaja(500.0, 0.0, 0.0); // Esto debería ser compartido en la aplicación
     // Crear instancia de VPago y pasar los datos
-    VPago vPago = new VPago(orderTotal, this); // Pasamos el total y el controlador actual
+    VPago vPago = new VPago(orderTotal, this,corteCaja); // Pasamos el total y el controlador actual
     vPago.actualizarCarrito(carritoProductos.toString()); // Actualizar el carrito de VPago
     vPago.setVisible(true); // Mostrar la ventana de pago
 
@@ -127,7 +160,7 @@ public void continueSale() {
     }
 
     public void abrirAdminView() {
-    	 // Solicitar la contrase�a al usuario
+    	 // Solicitar la contrasena al usuario
         String password = JOptionPane.showInputDialog(view, "Ingrese la contraseña para acceder a la administracion:");
 
         // Verificar la contrase�a
@@ -152,6 +185,8 @@ public void continueSale() {
             lockPOS();
         }
     }
+
+    
     public VPOSMenu getView() {
         return view;
     }

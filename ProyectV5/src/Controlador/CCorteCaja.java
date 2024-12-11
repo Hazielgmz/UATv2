@@ -46,4 +46,16 @@ public class CCorteCaja {
         }
         return false;
     }
+    public void incrementarTotalEfectivo(double monto) {
+        totalEfectivo += monto;
+    }
+    
+    public void incrementarTotalVisaMaster(double monto) {
+        totalVisaMaster += monto;
+    }
+    
+    public void incrementarTotalAmex(double monto) {
+        totalAmex += monto;
+    }
+    
 }

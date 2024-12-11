@@ -3,23 +3,31 @@ package Controlador;
 import Vista.VPOSMenu;
 import Vista.VPago;
 import Modelo.MTicket;
+import Reporte.RTicket;
 import DAO.DTicket;
 
 import javax.swing.*;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.*;
 
 public class CPago {
     private final VPago vista;
     private final double total;
     private final CPOSMenu cposMenu;
     private String metodoPago = "";
+    private static double efectivoEnCaja = 500.0;
+    private static double visaMasterEnCaja = 0.0;
+    private static double amexEnCaja = 0.0;
+    private final CCorteCaja corteCaja;
 
-    public CPago(VPago vista, double total, CPOSMenu cposMenu) {
+
+    public CPago(VPago vista, double total, CPOSMenu cposMenu, CCorteCaja corteCaja) {
         this.vista = vista;
         this.total = total;
         this.cposMenu = cposMenu;
+        this.corteCaja = corteCaja;
     }
 
     // Método para cargar los productos en el carrito de la vista VPago
@@ -86,24 +94,36 @@ public class CPago {
 
     // Crear panel de billetes
     public JPanel crearPanelBilletes() {
-        JPanel panelBilletes = new JPanel(new GridLayout(2, 3, 5, 5));
+        JPanel panelBilletes = new JPanel(new GridLayout(2, 3, 5, 5)); // 2 filas, 3 columnas con espacio de 5px
         panelBilletes.setBorder(BorderFactory.createTitledBorder("Billetes"));
-
+    
         int[] billetes = {20, 50, 100, 200, 500, 1000};
         for (int billete : billetes) {
             JButton billeteButton = new JButton();
-            billeteButton.setIcon(new ImageIcon("resources/" + billete + ".png")); // Ruta a las imágenes
+    
+            // Configurar imagen (si existe) y establecer el ícono del botón
+            String imagePath = "resources/" + billete + ".png";
+            try {
+                ImageIcon icon = new ImageIcon(imagePath);
+                Image scaledImage = icon.getImage().getScaledInstance(300, 100, Image.SCALE_SMOOTH);
+                billeteButton.setIcon(new ImageIcon(scaledImage));
+            } catch (Exception e) {
+                System.out.println("No se encontró la imagen para: " + billete);
+            }
+    
             billeteButton.setToolTipText("Billete de $" + billete); 
             billeteButton.addActionListener(e -> {
                 double ingresoActual = Double.parseDouble(
-                        vista.getIngresoField().getText().isEmpty() ? "0" : vista.getIngresoField().getText());
+                    vista.getIngresoField().getText().isEmpty() ? "0" : vista.getIngresoField().getText()
+                );
                 ingresoActual += billete;
                 vista.getIngresoField().setText(String.valueOf(ingresoActual));
                 calcularCambio();
             });
+    
             panelBilletes.add(billeteButton);
         }
-
+    
         return panelBilletes;
     }
 
@@ -145,9 +165,26 @@ public class CPago {
             boolean isInserted = dao.insertarTicket(ticket);
     
             if (isInserted) {
+                // Actualizar el total de acuerdo al método de pago
+            if ("Efectivo".equals(metodoPago)) {
+                corteCaja.incrementarTotalEfectivo(total);
+            } else if ("Visa/Mastercard".equals(metodoPago)) {
+                corteCaja.incrementarTotalVisaMaster(total);
+            } else if ("AMEX".equals(metodoPago)) {
+                corteCaja.incrementarTotalAmex(total);
+            }
+                // Obtener productos del carrito
+            DefaultListModel<String> carritoProductosModel = cposMenu.getView().getProductListModel();
+            java.util.List<String> carritoProductos = new java.util.ArrayList<>();
+            for (int i = 0; i < carritoProductosModel.getSize(); i++) {
+                carritoProductos.add(carritoProductosModel.getElementAt(i));
+            }
+            // Generar el ticket en PDF
+            RTicket.generarTicketPDF(metodoPago, total, carritoProductos);
                 JOptionPane.showMessageDialog(vista, "Compra registrada con éxito.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 cposMenu.clearCart(); // Limpiar carrito
                 vista.dispose(); // Cerrar la ventana de pago
+
 
                 // Volver a la clase VPOSMenu
             VPOSMenu vposMenu = new VPOSMenu(null); // Pasa el controlador adecuado si es necesario
@@ -170,5 +207,15 @@ public class CPago {
     VPOSMenu vposMenu = new VPOSMenu(null); // Asegúrate de pasar el controlador adecuado si es necesario
     vposMenu.setVisible(true);
 }
-
+ // Getter para obtener el total de efectivo en caja
+ public static double getEfectivoEnCaja() {
+    return efectivoEnCaja;
+}
+// Getter para obtener el total de efectivo en caja
+public static double getVisaMasterEnCaja() {
+    return visaMasterEnCaja;
+}// Getter para obtener el total de efectivo en caja
+public static double getAmexEnCaja() {
+    return amexEnCaja;
+}
 }

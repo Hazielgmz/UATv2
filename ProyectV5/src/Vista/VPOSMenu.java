@@ -1,10 +1,11 @@
 package Vista;
-import javax.swing.*;
 
 import Controlador.CPOSMenu;
+import Modelo.MProducto;
 
+import javax.swing.*;
 import java.awt.*;
-import java.util.HashMap;
+import java.util.List;
 
 public class VPOSMenu extends JFrame {
     private DefaultListModel<String> productListModel;
@@ -28,58 +29,53 @@ public class VPOSMenu extends JFrame {
         JPanel menuPanel = new JPanel();
         menuPanel.setLayout(new GridLayout(5, 4, 5, 5));
 
-        // Lista de frutas y precios
-        String[] fruits = { "Manzana", "Aguacate", "Platano", "Fresa",
-                            "Limon", "Sandia", "Zanahoria", "Durazno",
-                            "Cebolla", "Tomate", "Lechuga", "Naranja",
-                            "Granola", "Avena", "Cereal_Froot_Loops", "Cereal_Zucaritas",
-                            "MAS PRODUCTOS" };
-        double[] pricesPerKilo = { 30.0, 50.0, 20.0, 40.0 };
+        // Obtener productos desde la base de datos (tipo "GR")
+        List<MProducto> productos = cposMenu.getProductosPorTipo("GR");
 
-        // Mapa para asociar frutas con sus imágenes
-        HashMap<String, String> fruitImages = new HashMap<>();
-        for (String fruit : fruits) {
-            fruitImages.put(fruit, "resources/" + fruit.toLowerCase().replace(" ", "_") + ".png");
-        }
+        // Crear botones dinámicamente desde los productos (máximo 16)
+        int maxButtons = 16; // Límite de botones
+        int buttonCount = 0; // Contador de botones creados
 
-        // Crear botones con imágenes
-        for (int i = 0; i < fruits.length; i++) {
-            JButton button = new JButton(fruits[i]);
+        for (MProducto producto : productos) {
+            if (buttonCount >= maxButtons) {
+        break; // Salir del bucle si ya se alcanzó el límite
+    }
 
-            // Cargar imagen desde el mapa
-            String imagePath = fruitImages.get(fruits[i]);
-            try {
-                ImageIcon icon = new ImageIcon(imagePath);
+        JButton button = new JButton(producto.getNombreProducto());
 
-                // Escalar la imagen para que se ajuste al botón
-                Image scaledImage = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-                button.setIcon(new ImageIcon(scaledImage));
-            } catch (Exception e) {
-                System.out.println("No se encontró la imagen para: " + fruits[i]);
-            }
+     // Configurar imagen (si existe)
+        String imagePath = "resources/" + producto.getNombreProducto().toLowerCase().replace(" ", "_") + ".png";
+        try {
+        ImageIcon icon = new ImageIcon(imagePath);
+        Image scaledImage = icon.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+        button.setIcon(new ImageIcon(scaledImage));
+        } catch (Exception e) {
+        System.out.println("No se encontró la imagen para: " + producto.getNombreProducto());
+    }
 
-            // Configurar texto e imagen
-            button.setHorizontalTextPosition(SwingConstants.CENTER);
-            button.setVerticalTextPosition(SwingConstants.BOTTOM);
+    // Configurar texto e imagen
+    button.setHorizontalTextPosition(SwingConstants.CENTER);
+    button.setVerticalTextPosition(SwingConstants.BOTTOM);
 
-            // Asignar acción al botón
-            if (i < 3) { // Los tres primeros productos usan un listener especial
-                button.addActionListener(cposMenu.createFruitButtonListener(fruits[i], pricesPerKilo[i]));
-            } else {
-                button.addActionListener(e -> cposMenu.openFruitSearch());
-            }
+    // Asignar acción al botón
+    button.addActionListener(cposMenu.createDynamicButtonListener(producto));
 
-            menuPanel.add(button);
-        }
+    menuPanel.add(button);
 
-        // Botón adicional para buscar por código de barras
-        JButton barcodeSearchButton = new JButton("Buscar por código");
-        barcodeSearchButton.addActionListener(e -> cposMenu.searchProductByBarcode());
-        menuPanel.add(barcodeSearchButton);
+    buttonCount++; // Incrementar el contador de botones creados
+}
+        // Botón "MAS PRODUCTOS"
+        JButton moreProductsButton = new JButton("MAS PRODUCTOS");
+        moreProductsButton.addActionListener(e -> cposMenu.openMoreProductsDialog());
+        menuPanel.add(moreProductsButton);
+
+        // Botón "BUSCAR"
+        JButton searchButton = new JButton("BUSCAR");
+        searchButton.addActionListener(e -> cposMenu.searchProductByBarcode());
+        menuPanel.add(searchButton);
 
         // Panel derecho para la lista de productos y botones de acciones
         JPanel rightPanel = new JPanel(new BorderLayout());
-
         productListModel = new DefaultListModel<>();
         productList = new JList<>(productListModel);
         JScrollPane scrollPane = new JScrollPane(productList);
@@ -112,7 +108,7 @@ public class VPOSMenu extends JFrame {
         openButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Caja registradora abierta."));
         actionPanel.add(openButton);
 
-        JButton moreButton = new JButton("mas...");
+        JButton moreButton = new JButton("Más...");
         moreButton.addActionListener(e -> cposMenu.abrirAdminView());
         actionPanel.add(moreButton);
 
@@ -142,7 +138,7 @@ public class VPOSMenu extends JFrame {
         // Añadir los botones (actionPanel) al centro del panel inferior
         bottomPanel.add(actionPanel, BorderLayout.CENTER);
 
-        // Añadir el panel inferior al contenedor principal
+        // Añadir los paneles al contenedor principal
         getContentPane().add(menuPanel, BorderLayout.WEST);
         getContentPane().add(rightPanel, BorderLayout.EAST);
         getContentPane().add(bottomPanel, BorderLayout.SOUTH);

@@ -7,9 +7,12 @@ import java.awt.*;
 
 public class CAdmin {
     private final VAdmin vista;
+    private final CCorteCaja corteCaja; // Instancia de CCorteCaja compartida
 
-    public CAdmin(VAdmin vista) {
+
+    public CAdmin(VAdmin vista, CCorteCaja corteCaja) {
         this.vista = vista;
+        this.corteCaja = corteCaja; // Asignar la instancia compartida
     }
 
     public void configurarListeners(JButton btnCorteCaja, JButton btnGestionProductos,
@@ -61,10 +64,7 @@ public class CAdmin {
     }
 
     private void abrirCorteCaja() {
-        // Crear el controlador de Corte de Caja con valores iniciales (ejemplo)
-        CCorteCaja controller = new CCorteCaja(300.0, 0.0, 0.0);
-
-        VCorteCaja corteCajaView = new VCorteCaja(controller);
+        VCorteCaja corteCajaView = new VCorteCaja(corteCaja);
         corteCajaView.setVisible(true);
     }
 
@@ -81,7 +81,8 @@ public class CAdmin {
     }
 
     private void abrirReportes() {
-        JOptionPane.showMessageDialog(vista, "Abrir Reportes");
+        VReporteVentas reporte = new VReporteVentas();
+        reporte.setVisible(true);
     }
 
 

@@ -1,6 +1,6 @@
 package Vista;
-
 import Controlador.CPago;
+import Controlador.CCorteCaja;
 import Controlador.CPOSMenu;
 
 import javax.swing.*;
@@ -13,7 +13,7 @@ public class VPago extends JFrame {
     private JTextField ingresoField;
     private CPago controlador;
 
-    public VPago(double total, CPOSMenu cposMenu) {
+    public VPago(double total, CPOSMenu cposMenu, CCorteCaja corteCaja) {
         setTitle("Ventana de Pago - Vertical");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -23,7 +23,7 @@ public class VPago extends JFrame {
         setUndecorated(true);
 
         // Inicializar el controlador
-        controlador = new CPago(this, total, cposMenu);
+        controlador = new CPago(this, total, cposMenu, corteCaja);
 
         // Panel principal
         JPanel mainPanel = new JPanel();

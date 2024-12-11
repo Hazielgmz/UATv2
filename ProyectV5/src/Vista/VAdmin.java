@@ -1,6 +1,7 @@
 package Vista;
 
 import Controlador.CAdmin;
+import Controlador.CCorteCaja;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -66,7 +67,8 @@ public class VAdmin extends JFrame {
         setContentPane(contentPane);
 
         // Inicializar controlador
-        controlador = new CAdmin(this);
+        CCorteCaja corteCaja = new CCorteCaja(500.0, 0.0, 0.0); // Crear instancia inicial de CCorteCaja
+        controlador = new CAdmin(this, corteCaja); // Pasar VAdmin y CCorteCaja al controlador
 
         // Configurar listeners
         controlador.configurarListeners(btnCorteCaja, btnGestionProductos, btnConsultasVentas, 

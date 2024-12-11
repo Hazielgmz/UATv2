@@ -1,6 +1,8 @@
 package Vista;
 
 import Controlador.CCorteCaja;
+import Controlador.CPago;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
@@ -33,25 +35,28 @@ public class VCorteCaja extends JFrame {
         add(new JLabel("  "), BorderLayout.WEST);
         add(new JLabel("  "), BorderLayout.EAST);
     }
+    
 
     private JPanel crearPanelTotales() {
         JPanel panelTotales = new JPanel(new GridLayout(3, 1, 10, 10));
-        panelTotales.setBorder(new TitledBorder("Totales del Día"));
-        
+        panelTotales.setBorder(new TitledBorder("Totales del DÃ­a"));
+    
         efectivoLabel = new JLabel("Efectivo: $" + controller.getTotalEfectivo());
         visaMasterLabel = new JLabel("Visa/Master: $" + controller.getTotalVisaMaster());
         amexLabel = new JLabel("AMEX: $" + controller.getTotalAmex());
-
+    
         efectivoLabel.setFont(new Font("Arial", Font.BOLD, 14));
         visaMasterLabel.setFont(new Font("Arial", Font.BOLD, 14));
         amexLabel.setFont(new Font("Arial", Font.BOLD, 14));
-
+    
         panelTotales.add(efectivoLabel);
         panelTotales.add(visaMasterLabel);
         panelTotales.add(amexLabel);
-
+    
         return panelTotales;
     }
+    
+
 
     private JPanel crearPanelRetiro() {
         JPanel panelRetiro = new JPanel(new GridLayout(3, 2, 10, 10));
@@ -65,7 +70,7 @@ public class VCorteCaja extends JFrame {
         panelRetiro.add(new JLabel("Monto a Retirar:"));
         panelRetiro.add(retiroTextField);
 
-        panelRetiro.add(new JLabel("Método de Retiro:"));
+        panelRetiro.add(new JLabel("Metodo de Retiro:"));
         panelRetiro.add(metodoRetiroComboBox);
 
         panelRetiro.add(new JLabel());
@@ -85,7 +90,7 @@ public class VCorteCaja extends JFrame {
                 JOptionPane.showMessageDialog(this, "Fondos insuficientes en " + metodo + ".");
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Por favor, ingresa un monto válido.");
+            JOptionPane.showMessageDialog(this, "Por favor, ingresa un monto valido.");
         }
     }
 
@@ -94,4 +99,5 @@ public class VCorteCaja extends JFrame {
         visaMasterLabel.setText("Visa/Master: $" + controller.getTotalVisaMaster());
         amexLabel.setText("AMEX: $" + controller.getTotalAmex());
     }
+    
 }

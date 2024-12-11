@@ -166,4 +166,48 @@ public class DProducto {
         }
         return null; // Retorna null si no se encuentra el producto
     }
+    public List<MProducto> obtenerTodosLosProductos() {
+        List<MProducto> productos = new ArrayList<>();
+        String query = "SELECT CodigoID, nombre_producto, costo FROM PRODUCTO";
+
+        try (Connection conn = ConexionBD.conectarSQLServer();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                MProducto producto = new MProducto();
+                producto.setCodigoID(rs.getInt("CodigoID"));
+                producto.setNombreProducto(rs.getString("nombre_producto"));
+                producto.setCosto(rs.getBigDecimal("costo"));
+
+                productos.add(producto);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return productos;
+    }
+
+    public List<MProducto> obtenerProductosPorTipo(String tipo) {
+        List<MProducto> productos = new ArrayList<>();
+        String query = "SELECT CodigoID, nombre_producto, costo FROM PRODUCTO WHERE tipo = ?";
+    
+        try (Connection conn = ConexionBD.conectarSQLServer();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, tipo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    MProducto producto = new MProducto();
+                    producto.setCodigoID(rs.getInt("CodigoID"));
+                    producto.setNombreProducto(rs.getString("nombre_producto"));
+                    producto.setCosto(rs.getBigDecimal("costo"));
+                    productos.add(producto);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return productos;
+    }
+    
 }
